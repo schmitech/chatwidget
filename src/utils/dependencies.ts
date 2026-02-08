@@ -9,6 +9,8 @@ interface LoadDependencyResult {
 // Track loaded scripts and stylesheets to prevent duplicates
 const loadedScripts = new Set<string>();
 const loadedStylesheets = new Set<string>();
+const REACT_18_SCRIPT_URL = 'https://unpkg.com/react@18/umd/react.production.min.js';
+const REACTDOM_18_SCRIPT_URL = 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js';
 
 const debugLog = (...args: any[]) => {
   if (isDebugEnabled()) {
@@ -164,6 +166,26 @@ async function loadSingleStylesheet(href: string, isLocal: boolean): Promise<Loa
   });
 }
 
+async function ensureReactGlobalsForLocalWidget(): Promise<LoadDependencyResult> {
+  debugLog('⚛️ Loading React 18 UMD globals for local widget build...');
+  const reactResult = await loadScript(REACT_18_SCRIPT_URL, false);
+  if (!reactResult.success) {
+    return {
+      success: false,
+      error: reactResult.error || 'Failed to load React 18 UMD bundle'
+    };
+  }
+  const domResult = await loadScript(REACTDOM_18_SCRIPT_URL, false);
+  if (!domResult.success) {
+    return {
+      success: false,
+      error: domResult.error || 'Failed to load ReactDOM 18 UMD bundle'
+    };
+  }
+  debugLog('✅ React 18 UMD globals loaded');
+  return { success: true };
+}
+
 // Check if React is available (like demo.html does)
 function checkReactAvailability(): boolean {
   const hasReact = typeof window.React !== 'undefined';
@@ -191,6 +213,16 @@ export async function loadWidgetDependencies(): Promise<{ success: boolean; erro
   });
 
   // Step 1: Check React availability (like demo.html)
+  if (!checkReactAvailability()) {
+    if (urls.isLocal) {
+      const reactLoadResult = await ensureReactGlobalsForLocalWidget();
+      if (!reactLoadResult.success) {
+        errors.push(reactLoadResult.error || 'Failed to load React globals for local widget');
+        return { success: false, errors };
+      }
+    }
+  }
+
   if (!checkReactAvailability()) {
     const reactError = 'React and ReactDOM must be loaded first (like in demo.html)';
     debugError(reactError);
