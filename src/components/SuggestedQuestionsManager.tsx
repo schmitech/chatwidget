@@ -1,10 +1,8 @@
 import React from 'react';
 import { Button } from './Button';
+import type { WidgetConfig } from '../types/widget.types';
 
-interface SuggestedQuestion {
-  text: string;
-  query: string;
-}
+type SuggestedQuestion = WidgetConfig['suggestedQuestions'][number];
 
 interface SuggestedQuestionsManagerProps {
   questions: SuggestedQuestion[];
@@ -23,13 +21,15 @@ export const SuggestedQuestionsManager: React.FC<SuggestedQuestionsManagerProps>
   onAddQuestion,
   onRemoveQuestion
 }) => {
+  const disableAdd = questions.length >= 5;
+
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium text-gray-900">Suggested Questions</h3>
         <Button
           onClick={onAddQuestion}
-          disabled={questions.length >= 6}
+          disabled={disableAdd}
           variant="ghost"
           size="sm"
         >
@@ -39,7 +39,7 @@ export const SuggestedQuestionsManager: React.FC<SuggestedQuestionsManagerProps>
       
       <div className="space-y-3">
         {questions.map((question, index) => (
-          <div key={index} className="p-3 border border-black rounded-lg relative">
+          <div key={question.id || index} className="p-3 border border-black rounded-lg relative">
             <Button
               onClick={() => onRemoveQuestion(index)}
               variant="ghost"
@@ -53,30 +53,26 @@ export const SuggestedQuestionsManager: React.FC<SuggestedQuestionsManagerProps>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
                   Display Text (max {maxQuestionLength} chars)
                 </label>
-                <div className="flex gap-2">
-                  <div className="flex-1 relative">
-                    <input
-                      type="text"
-                      value={question.text}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        // Enforce the max length during typing
-                        if (value.length <= maxQuestionLength) {
-                          onUpdateQuestion(index, 'text', value);
-                        } else {
-                          onUpdateQuestion(index, 'text', value.substring(0, maxQuestionLength));
-                        }
-                      }}
-                      maxLength={maxQuestionLength}
-                      className="w-full px-3 py-2 pr-16 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Button text"
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                      <span className="text-xs text-gray-400 bg-white px-1">
-                        {question.text.length}/{maxQuestionLength}
-                      </span>
-                    </div>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={question.text}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Enforce the max length during typing
+                      if (value.length <= maxQuestionLength) {
+                        onUpdateQuestion(index, 'text', value);
+                      } else {
+                        onUpdateQuestion(index, 'text', value.substring(0, maxQuestionLength));
+                      }
+                    }}
+                    maxLength={maxQuestionLength}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Button text"
+                  />
+                  <span className="text-xs text-gray-500 whitespace-nowrap">
+                    {question.text.length}/{maxQuestionLength}
+                  </span>
                 </div>
               </div>
               
@@ -84,7 +80,7 @@ export const SuggestedQuestionsManager: React.FC<SuggestedQuestionsManagerProps>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
                   Query (max {maxQueryLength} chars)
                 </label>
-                <div className="relative">
+                <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={question.query}
@@ -98,14 +94,12 @@ export const SuggestedQuestionsManager: React.FC<SuggestedQuestionsManagerProps>
                       }
                     }}
                     maxLength={maxQueryLength}
-                    className="w-full px-3 py-2 pr-16 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder="Query sent to API"
                   />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <span className="text-xs text-gray-400 bg-white px-1">
-                      {question.query.length}/{maxQueryLength}
-                    </span>
-                  </div>
+                  <span className="text-xs text-gray-500 whitespace-nowrap">
+                    {question.query.length}/{maxQueryLength}
+                  </span>
                 </div>
               </div>
             </div>

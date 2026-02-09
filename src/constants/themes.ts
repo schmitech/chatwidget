@@ -34,22 +34,27 @@ export const defaultWidgetConfig: WidgetConfig = {
   },
   suggestedQuestions: [
     {
+      id: 'sq-intro',
       text: '👋 Introduce yourself',
       query: 'Hello! Please introduce yourself and tell me what you can help with.'
     },
     {
+      id: 'sq-quantum',
       text: '💡 Explain quantum computing',
       query: 'Explain quantum computing in simple terms.'
     },
     {
+      id: 'sq-recipe',
       text: '🍳 Give me a recipe',
       query: 'What is a quick and easy pasta recipe?'
     },
     {
+      id: 'sq-fun-fact',
       text: '🧠 Tell me a fun fact',
       query: 'Tell me a surprising fun fact I probably don\'t know.'
     },
     {
+      id: 'sq-haiku',
       text: '📝 Write a haiku',
       query: 'Write a haiku about technology.'
     }

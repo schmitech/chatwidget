@@ -1,279 +1,100 @@
-# Widget Source Toggle & Theming App Guide
+# Chatbot Widget Theming App Guide
+
+This theming application now relies exclusively on the `@schmitech/chatbot-widget` package from npm. All logic for switching between local and npm builds has been removed, which keeps the development workflow simple and mirrors production.
 
 ## Quick Start
 
-### Using NPM Package (Default)
 ```bash
+npm install
 npm run dev
-# or specifically
-npm run dev:npm
 ```
 
-### Using Local Build
+To produce an optimized build:
+
 ```bash
-npm run dev:local
+npm run build
 ```
+
+If you prefer a scripted setup that also writes `.env.local`, run `./deploy.sh`. The script configures the environment for npm usage and then launches `npm run dev`.
 
 ## Environment Variables
 
-You can configure the widget source using environment variables:
-
-### Available Variables
+Only the npm-specific variables remain. Create a `.env.local` file when you need to override defaults.
 
 ```bash
-# Widget source toggle - 'local' or 'npm'
-VITE_WIDGET_SOURCE=local
-
-# Debug logging toggle - 'true', 'false', or auto (defaults to DEV mode)
-VITE_WIDGET_DEBUG=true
-
-# Local widget paths (used when VITE_WIDGET_SOURCE=local)
-VITE_LOCAL_WIDGET_JS_PATH=../dist/chatbot-widget.umd.js
-VITE_LOCAL_WIDGET_CSS_PATH=../dist/chatbot-widget.css
-
-# NPM widget version (used when VITE_WIDGET_SOURCE=npm)
-VITE_NPM_WIDGET_VERSION=0.4.9
-```
-
-### Debug Logging Behavior
-
-The debug logging follows this priority:
-1. **Production builds**: Debug logging is **automatically disabled** (`import.meta.env.DEV = false`)
-2. **Development builds**: Debug logging is **enabled by default** (`import.meta.env.DEV = true`)
-3. **Manual override**: Set `VITE_WIDGET_DEBUG=false` to disable even in development
-4. **Force enable**: Set `VITE_WIDGET_DEBUG=true` to enable even in production (not recommended)
-
-### Setting Up Environment Variables
-
-Create a `.env.local` file in the theming app root:
-
-```bash
-# .env.local
-
-# Widget source
-VITE_WIDGET_SOURCE=local
-
-# Debug logging (optional - defaults to development mode)
-VITE_WIDGET_DEBUG=true
-
-# Prompt tab configuration (optional - defaults to enabled)
-VITE_PROMPT_ENABLED=true
-
-# Default API endpoint (optional - defaults to localhost:3000)
+VITE_NPM_WIDGET_VERSION=0.7.1       # Force a specific widget version from npm
+VITE_WIDGET_DEBUG=false             # true = verbose loader logs, false = quiet
+VITE_PROMPT_ENABLED=true            # Hide or show the Prompt tab
 VITE_DEFAULT_API_ENDPOINT=http://localhost:3000
-
-# GitHub repository configuration (optional - defaults to schmitech/orbit)
 VITE_GITHUB_OWNER=schmitech
 VITE_GITHUB_REPO=orbit
-
-# Paths
-VITE_LOCAL_WIDGET_JS_PATH=../dist/chatbot-widget.umd.js
-VITE_LOCAL_WIDGET_CSS_PATH=../dist/chatbot-widget.css
-VITE_NPM_WIDGET_VERSION=0.4.9
+VITE_UNAVAILABLE_MSG=false          # true shows a site-wide maintenance banner
+VITE_ENDPOINT_FIELD_ENABLED=true    # Allow editing the API endpoint input
+VITE_API_CONFIG_ENABLED=true        # Hide API key/endpoint controls when false
 ```
 
-## Debug Logging Examples
+### Sample `.env.local`
 
-### Development Mode (Debug Enabled)
+```bash
+VITE_NPM_WIDGET_VERSION=0.7.1
+VITE_WIDGET_DEBUG=true
+VITE_PROMPT_ENABLED=false
+VITE_DEFAULT_API_ENDPOINT=https://api.my-company.com
+VITE_GITHUB_OWNER=my-org
+VITE_GITHUB_REPO=my-chatbot
+VITE_UNAVAILABLE_MSG=false
+VITE_ENDPOINT_FIELD_ENABLED=true
+VITE_API_CONFIG_ENABLED=true
+```
+
+## Debug Logging
+
+`VITE_WIDGET_DEBUG` controls loader verbosity:
+
+1. Production builds disable debug logs automatically.
+2. Development builds enable debug logs unless you set `VITE_WIDGET_DEBUG=false`.
+3. Setting `VITE_WIDGET_DEBUG=true` forces logging even in production (use sparingly).
+
+Example output while debugging:
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 WIDGET SOURCE: 🔧 LOCAL BUILD
+🚀 INITIALIZING WIDGET WITH 📦 NPM PACKAGE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📍 JavaScript: ../dist/chatbot-widget.umd.js
-🎨 Stylesheet: ../dist/chatbot-widget.css
-💡 Using local build - ensure widget is compiled in ../dist/
-⚡ To switch to NPM: npm run dev:npm
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ Widget loaded successfully from LOCAL BUILD!
-
-🚀 INITIALIZING WIDGET WITH 🔧 LOCAL BUILD
 📋 Widget Configuration:
    Header: "AI Assistant"
-   Welcome: "Hello! How can I help you today?"
+   Welcome: "How can I help?"
    Suggested Questions: 2 items
    Primary Color: #EC994B
    Secondary Color: #1E3A8A
-✅ Widget initialized successfully with 🔧 LOCAL BUILD!
-🎯 Widget ready for testing in bottom-right corner
+💡 Using NPM package v0.7.1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Widget initialized successfully with 📦 NPM PACKAGE!
 ```
 
-### Production Mode (Debug Disabled)
-```
-# Silent operation - no debug logs
-# Only critical errors are shown
-```
+Set `VITE_WIDGET_DEBUG=false` when you want a quiet console during development.
 
-### Debug Disabled in Development
-```bash
-# Set in .env.local
-VITE_WIDGET_DEBUG=false
-```
-Result: Silent operation even in development mode.
+## Feature Toggles
 
-## Usage Scenarios
+- **Prompt tab** – `VITE_PROMPT_ENABLED=false` hides the Prompt UI and automatically routes users back to the Theme tab.
+- **API configuration inputs** – `VITE_API_CONFIG_ENABLED=false` hides the API key/endpoint block entirely. Combine with `VITE_ENDPOINT_FIELD_ENABLED=false` if you want the endpoint locked to the runtime value.
+- **GitHub stats** – Configure `VITE_GITHUB_OWNER` and `VITE_GITHUB_REPO` to point the GitHub badge and stats to a different repository.
+- **Maintenance banner** – Set `VITE_UNAVAILABLE_MSG=true` to show a red warning banner across the top of the app.
 
-### 1. Testing Local Changes Before Publishing
+## Deployment Workflow
 
-When you've made changes to the widget and want to test them:
+1. Ensure dependencies are installed: `npm install`.
+2. (Optional) Run `./deploy.sh` to regenerate `.env.local` with npm defaults.
+3. Start the dev server with `npm run dev`.
+4. Build for production with `npm run build` and serve the contents of `dist/`.
 
-```bash
-# 1. Build the widget locally (from widget root directory)
-npm run build
-
-# 2. Test with local build (from theming app directory)
-npm run dev:local
-```
-
-### 2. Testing Against Published NPM Package
-
-To ensure compatibility with the current published version:
-
-```bash
-npm run dev:npm
-```
-
-### 3. Production Deployments
-
-For production, debug logging is automatically disabled regardless of `VITE_WIDGET_SOURCE`:
-
-```bash
-# Build for production with NPM package (recommended)
-npm run build:npm
-
-# Build for production with local version (for internal deployments)
-npm run build:local
-```
-
-Both will have debug logging disabled in production.
-
-### 4. Prompt Tab Configuration
-
-The prompt tab allows users to customize the system prompt for their chatbot. You can disable this feature in production if it's not ready:
-
-```bash
-# Disable prompt tab functionality
-VITE_PROMPT_ENABLED=false
-```
-
-When disabled:
-- The "Prompt" tab will not appear in the navigation
-- If a user is on the prompt tab when disabled, they'll be redirected to the "Theme" tab
-- The prompt functionality will be completely hidden from the UI
-
-### 5. API Endpoint Configuration
-
-You can set a default API endpoint that will pre-populate the API endpoint field:
-
-```bash
-# Set default API endpoint
-VITE_DEFAULT_API_ENDPOINT=https://your-production-api.com
-```
-
-This is useful for:
-- Pre-configuring production endpoints for different environments
-- Setting up staging vs production endpoints
-- Providing a default that users can modify
-
-### 6. GitHub Repository Configuration
-
-You can configure which GitHub repository to display stats for:
-
-```bash
-# Set GitHub repository for stats display
-VITE_GITHUB_OWNER=schmitech
-VITE_GITHUB_REPO=orbit
-```
-
-This is useful for:
-- Displaying stats for your own fork of the project
-- Pointing to different repositories for different deployments
-- Customizing the "Powered by" section for your own projects
-
-### 7. Clean Development (No Debug Logs)
-
-If you want development without verbose logging:
-
-```bash
-# Option 1: Environment variable
-VITE_WIDGET_DEBUG=false npm run dev:local
-
-# Option 2: Set in .env.local
-echo "VITE_WIDGET_DEBUG=false" >> .env.local
-npm run dev:local
-```
-
-## Visual Indicators
-
-The theming app displays a badge in the header indicating which source is being used:
-
-- 🔧 **Local Build** - Green badge when using local files
-- 📦 **NPM Package** - Blue badge when using NPM package
+Because the widget is always loaded from npm/unpkg, no local file copying or custom scripts are necessary.
 
 ## Troubleshooting
 
-### Local Build Not Loading
+- **Widget assets fail to load** – Confirm that `@schmitech/chatbot-widget` is installed and that your network allows requests to `https://unpkg.com`. You can also bump `VITE_NPM_WIDGET_VERSION` to a specific published version.
+- **Missing `window.React` / `window.ReactDOM`** – The app now pins those globals from React 19 automatically in `src/main.tsx`, so a missing global typically indicates a script error earlier in the bundle.
+- **Quiet console but widget not visible** – Temporarily set `VITE_WIDGET_DEBUG=true` to surface loader diagnostics, then reload the page to view dependency status logs.
+- **API inputs hidden** – Check `VITE_API_CONFIG_ENABLED` and `VITE_ENDPOINT_FIELD_ENABLED`; these flags control the presence of the form fields.
 
-If you see errors when using local build:
-
-1. **Check if widget is built**: Make sure you've run `npm run build` in the widget directory
-2. **Verify paths**: Ensure the paths in your environment variables point to the correct files
-3. **Check console**: Look for loading errors in browser developer tools
-4. **Enable debug logging**: Set `VITE_WIDGET_DEBUG=true` for detailed troubleshooting
-
-### Path Configuration
-
-The default paths assume this directory structure:
-```
-orbit/
-├── clients/
-│   └── chat-widget/
-│       ├── dist/                    # Widget build output
-│       │   ├── chatbot-widget.umd.js
-│       │   └── chatbot-widget.css
-│       └── theming-app/             # This app
-│           └── ...
-```
-
-If your structure is different, adjust the `VITE_LOCAL_WIDGET_*_PATH` variables accordingly.
-
-## Integration with Build Pipeline
-
-For automated testing, you can use environment variables in your CI/CD:
-
-```yaml
-# Example GitHub Actions
-- name: Test with local build (debug enabled)
-  run: npm run dev:local
-  env:
-    VITE_WIDGET_SOURCE: local
-    VITE_WIDGET_DEBUG: true
-
-- name: Test with NPM package (debug disabled)
-  run: npm run dev:npm
-  env:
-    VITE_WIDGET_SOURCE: npm
-    VITE_WIDGET_DEBUG: false
-
-- name: Production build (debug auto-disabled)
-  run: npm run build:npm
-```
-
-## Development Workflow
-
-Recommended workflow for widget development:
-
-1. **Make changes** to the widget source code
-2. **Build the widget**: `npm run build` (from widget directory)
-3. **Test locally with debug**: `npm run dev:local` (from theming app)
-4. **Verify functionality** in the theming app
-5. **Test with NPM**: `npm run dev:npm` to ensure compatibility
-6. **Disable debug for clean testing**: `VITE_WIDGET_DEBUG=false npm run dev:local`
-7. **Test production build**: `npm run build:local` (debug auto-disabled)
-8. **Publish widget** when satisfied
-9. **Update version** in environment variables if needed
-
-## Error Handling
-
-- **Critical errors** (load failures, initialization errors) are always shown, even in production
-- **Debug information** and **troubleshooting tips** are only shown when debug is enabled
-- **Widget source indicators** are always shown in the UI, regardless of debug setting
+For automated environments (CI, preview deployments, etc.), reuse the same `npm run dev`/`npm run build` commands—the widget source no longer affects the workflow.

@@ -2,6 +2,13 @@ import { useState } from 'react';
 import type { WidgetConfig } from '../types/widget.types';
 import { defaultWidgetConfig } from '../constants/themes';
 
+const generateQuestionId = () => {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID();
+  }
+  return `sq-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+};
+
 export const useWidgetConfig = () => {
   const [widgetConfig, setWidgetConfig] = useState<WidgetConfig>(defaultWidgetConfig);
 
@@ -19,7 +26,7 @@ export const useWidgetConfig = () => {
         ...widgetConfig,
         suggestedQuestions: [
           ...widgetConfig.suggestedQuestions,
-          { text: "New question", query: "New query" }
+          { id: generateQuestionId(), text: "New question", query: "New query" }
         ]
       });
     }
@@ -27,7 +34,7 @@ export const useWidgetConfig = () => {
 
   // Remove suggested question
   const removeSuggestedQuestion = (index: number) => {
-    const questions = widgetConfig.suggestedQuestions.filter((_: any, i: number) => i !== index);
+    const questions = widgetConfig.suggestedQuestions.filter((_, i) => i !== index);
     setWidgetConfig({ ...widgetConfig, suggestedQuestions: questions });
   };
 

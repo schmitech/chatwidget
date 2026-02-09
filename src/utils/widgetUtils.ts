@@ -125,18 +125,16 @@ export const initializeWidget = (
   // Check if already initialized to prevent duplicates
   if (widgetInitialized) {
     if (isDebugEnabled()) {
-      const isLocal = WIDGET_CONFIG.source === 'local';
-      const style = isLocal ? 'color: #10b981;' : 'color: #3b82f6;';
-      console.log(`%c🔄 Widget already initialized with ${isLocal ? '🔧 LOCAL BUILD' : '📦 NPM PACKAGE'} - skipping duplicate initialization`, style);
+      const style = 'color: #3b82f6;';
+      console.log(`%c🔄 Widget already initialized with 📦 NPM PACKAGE - skipping duplicate initialization`, style);
     }
     return;
   }
 
   // Enhanced console logging for initialization (only if debug enabled)
   if (isDebugEnabled()) {
-    const isLocal = WIDGET_CONFIG.source === 'local';
-    const style = isLocal ? 'color: #10b981; font-weight: bold;' : 'color: #3b82f6; font-weight: bold;';
-    const prefix = isLocal ? '🔧 LOCAL BUILD' : '📦 NPM PACKAGE';
+    const style = 'color: #3b82f6; font-weight: bold;';
+    const prefix = '📦 NPM PACKAGE';
     
     console.log(`%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, style);
     console.log(`%c🚀 INITIALIZING WIDGET WITH ${prefix}`, style);
@@ -148,11 +146,7 @@ export const initializeWidget = (
     console.log(`%c   Primary Color: ${customColors.primary}`, style);
     console.log(`%c   Secondary Color: ${customColors.secondary}`, style);
     
-    if (isLocal) {
-      console.log(`%c💡 Testing with local widget build`, style);
-    } else {
-      console.log(`%c💡 Using NPM package v${WIDGET_CONFIG.npm.version}`, style);
-    }
+    console.log(`%c💡 Using NPM package v${WIDGET_CONFIG.npm.version}`, style);
     
     console.log(`%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, style);
   }
@@ -172,6 +166,7 @@ export const initializeWidget = (
   }
 
   const { systemPrompt, ...widgetConfigWithoutPrompt } = widgetConfig;
+  void systemPrompt;
   
   // Log the API key being used (masked for security)
   if (isDebugEnabled()) {
@@ -195,10 +190,8 @@ export const initializeWidget = (
     widgetInitialized = true; // Mark as initialized
     
     if (isDebugEnabled()) {
-      const isLocal = WIDGET_CONFIG.source === 'local';
-      const style = isLocal ? 'color: #10b981; font-weight: bold;' : 'color: #3b82f6; font-weight: bold;';
-      const prefix = isLocal ? '🔧 LOCAL BUILD' : '📦 NPM PACKAGE';
-      console.log(`%c✅ Widget initialized successfully with ${prefix}!`, style);
+      const style = 'color: #3b82f6; font-weight: bold;';
+      console.log(`%c✅ Widget initialized successfully with 📦 NPM PACKAGE!`, style);
       console.log(`%c🎯 Widget ready for testing in bottom-right corner`, style);
       
       // Wait a moment then ensure the widget has access to update methods
@@ -218,10 +211,8 @@ export const initializeWidget = (
     }
   } catch (error) {
     // Always show initialization errors, even in production
-    const isLocal = WIDGET_CONFIG.source === 'local';
-    const prefix = isLocal ? '🔧 LOCAL BUILD' : '📦 NPM PACKAGE';
     const errorStyle = 'color: #ef4444; font-weight: bold;';
-    console.error(`%c❌ Failed to initialize widget with ${prefix}:`, errorStyle, error);
+    console.error(`%c❌ Failed to initialize widget with 📦 NPM PACKAGE:`, errorStyle, error);
   }
 };
 
@@ -245,6 +236,7 @@ export const updateWidget = (
   }
 
   const { systemPrompt, ...widgetConfigWithoutPrompt } = widgetConfig;
+  void systemPrompt;
   
   try {
     // Update theme and configuration
@@ -255,9 +247,8 @@ export const updateWidget = (
     
     // Optional: Log updates only if debug enabled
     if (isDebugEnabled()) {
-      const isLocal = WIDGET_CONFIG.source === 'local';
-      const style = isLocal ? 'color: #10b981;' : 'color: #3b82f6;';
-      console.log(`%c🔄 Widget updated (${isLocal ? 'LOCAL' : 'NPM'})`, style);
+      const style = 'color: #3b82f6;';
+      console.log(`%c🔄 Widget updated (NPM)`, style);
       console.log(`%c   Updated config:`, style, {
         header: widgetConfigWithoutPrompt.header.title,
         welcome: widgetConfigWithoutPrompt.welcome.title,

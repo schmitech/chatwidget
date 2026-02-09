@@ -3,7 +3,6 @@ import type { ExpandedSections, TabType } from '../types/widget.types';
 
 export const useUIState = () => {
   const [activeTab, setActiveTab] = useState<TabType>('theme');
-  const [copied, setCopied] = useState(false);
   const [expandedSections, setExpandedSections] = useState<ExpandedSections>({
     mainColors: true,
     textColors: true,
@@ -18,12 +17,6 @@ export const useUIState = () => {
       ...prev,
       [section]: !prev[section]
     }));
-  };
-
-  // Handle copy feedback
-  const handleCopySuccess = () => {
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   // Expand all sections
@@ -51,12 +44,9 @@ export const useUIState = () => {
   return {
     activeTab,
     setActiveTab,
-    copied,
-    setCopied,
     expandedSections,
     setExpandedSections,
     toggleSection,
-    handleCopySuccess,
     expandAllSections,
     collapseAllSections
   };

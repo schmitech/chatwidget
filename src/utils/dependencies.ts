@@ -1,4 +1,4 @@
-import { getWidgetUrls, isDebugEnabled, getPossibleLocalPaths } from './widget-config';
+import { getWidgetUrls, isDebugEnabled } from './widget-config';
 
 interface LoadDependencyResult {
   success: boolean;
@@ -9,10 +9,8 @@ interface LoadDependencyResult {
 // Track loaded scripts and stylesheets to prevent duplicates
 const loadedScripts = new Set<string>();
 const loadedStylesheets = new Set<string>();
-const REACT_18_SCRIPT_URL = 'https://unpkg.com/react@18/umd/react.production.min.js';
-const REACTDOM_18_SCRIPT_URL = 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js';
 
-const debugLog = (...args: any[]) => {
+const debugLog = (...args: unknown[]) => {
   if (isDebugEnabled()) {
     console.log(
       '%c🔧 Widget Loader:', 
@@ -22,7 +20,7 @@ const debugLog = (...args: any[]) => {
   }
 };
 
-const debugError = (...args: any[]) => {
+const debugError = (...args: unknown[]) => {
   console.error(
     '%c❌ Widget Loader Error:', 
     'background: #dc2626; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;',
@@ -30,54 +28,20 @@ const debugError = (...args: any[]) => {
   );
 };
 
-// Enhanced script loader with fallback paths for local builds
-async function loadScript(src: string, isLocal: boolean = false): Promise<LoadDependencyResult> {
+// Enhanced script loader to avoid duplicate loads
+async function loadScript(src: string): Promise<LoadDependencyResult> {
   // Prevent duplicate loading
   if (loadedScripts.has(src)) {
     debugLog(`Script already loaded: ${src}`);
     return { success: true, url: src };
   }
-
-  // For local builds, try multiple paths like demo.html
-  if (isLocal) {
-    const possiblePaths = getPossibleLocalPaths();
-    const pathsToTry = [
-      src, // Original path
-      possiblePaths.sameLevel.js, // Demo.html style
-      possiblePaths.oneUp.js, // Original theming app style
-      possiblePaths.absolute.js // Absolute path
-    ];
-
-    for (const pathToTry of pathsToTry) {
-      debugLog(`Trying local script path: ${pathToTry}`);
-      
-      try {
-        const result = await loadSingleScript(pathToTry, true);
-        if (result.success) {
-          debugLog(`✅ Successfully loaded local script: ${pathToTry}`);
-          loadedScripts.add(src);
-          return result;
-        }
-      } catch (error) {
-        debugLog(`❌ Failed to load script from: ${pathToTry}`, error);
-      }
-    }
-    
-    debugError(`Failed to load local script from any path. Tried:`, pathsToTry);
-    return { 
-      success: false, 
-      error: `Failed to load local script. Tried paths: ${pathsToTry.join(', ')}` 
-    };
-  }
-
-  // For NPM builds, just load directly
-  return loadSingleScript(src, false);
+  return loadSingleScript(src);
 }
 
-async function loadSingleScript(src: string, isLocal: boolean): Promise<LoadDependencyResult> {
+async function loadSingleScript(src: string): Promise<LoadDependencyResult> {
   return new Promise((resolve) => {
     const script = document.createElement('script');
-    script.src = isLocal ? `${src}?t=${Date.now()}` : src; // Cache busting for local files
+    script.src = src;
     script.crossOrigin = 'anonymous';
 
     script.onload = () => {
@@ -98,55 +62,21 @@ async function loadSingleScript(src: string, isLocal: boolean): Promise<LoadDepe
   });
 }
 
-// Enhanced CSS loader with fallback paths for local builds
-async function loadStylesheet(href: string, isLocal: boolean = false): Promise<LoadDependencyResult> {
+// Enhanced CSS loader to avoid duplicate loads
+async function loadStylesheet(href: string): Promise<LoadDependencyResult> {
   // Prevent duplicate loading
   if (loadedStylesheets.has(href)) {
     debugLog(`Stylesheet already loaded: ${href}`);
     return { success: true, url: href };
   }
-
-  // For local builds, try multiple paths like demo.html
-  if (isLocal) {
-    const possiblePaths = getPossibleLocalPaths();
-    const pathsToTry = [
-      href, // Original path
-      possiblePaths.sameLevel.css, // Demo.html style
-      possiblePaths.oneUp.css, // Original theming app style
-      possiblePaths.absolute.css // Absolute path
-    ];
-
-    for (const pathToTry of pathsToTry) {
-      debugLog(`Trying local CSS path: ${pathToTry}`);
-      
-      try {
-        const result = await loadSingleStylesheet(pathToTry, true);
-        if (result.success) {
-          debugLog(`✅ Successfully loaded local CSS: ${pathToTry}`);
-          loadedStylesheets.add(href);
-          return result;
-        }
-      } catch (error) {
-        debugLog(`❌ Failed to load CSS from: ${pathToTry}`, error);
-      }
-    }
-    
-    debugError(`Failed to load local CSS from any path. Tried:`, pathsToTry);
-    return { 
-      success: false, 
-      error: `Failed to load local CSS. Tried paths: ${pathsToTry.join(', ')}` 
-    };
-  }
-
-  // For NPM builds, just load directly
-  return loadSingleStylesheet(href, false);
+  return loadSingleStylesheet(href);
 }
 
-async function loadSingleStylesheet(href: string, isLocal: boolean): Promise<LoadDependencyResult> {
+async function loadSingleStylesheet(href: string): Promise<LoadDependencyResult> {
   return new Promise((resolve) => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = isLocal ? `${href}?t=${Date.now()}` : href; // Cache busting for local files
+    link.href = href;
 
     link.onload = () => {
       debugLog(`✅ Stylesheet loaded successfully: ${href}`);
@@ -164,26 +94,6 @@ async function loadSingleStylesheet(href: string, isLocal: boolean): Promise<Loa
 
     document.head.appendChild(link);
   });
-}
-
-async function ensureReactGlobalsForLocalWidget(): Promise<LoadDependencyResult> {
-  debugLog('⚛️ Loading React 18 UMD globals for local widget build...');
-  const reactResult = await loadScript(REACT_18_SCRIPT_URL, false);
-  if (!reactResult.success) {
-    return {
-      success: false,
-      error: reactResult.error || 'Failed to load React 18 UMD bundle'
-    };
-  }
-  const domResult = await loadScript(REACTDOM_18_SCRIPT_URL, false);
-  if (!domResult.success) {
-    return {
-      success: false,
-      error: domResult.error || 'Failed to load ReactDOM 18 UMD bundle'
-    };
-  }
-  debugLog('✅ React 18 UMD globals loaded');
-  return { success: true };
 }
 
 // Check if React is available (like demo.html does)
@@ -206,25 +116,13 @@ export async function loadWidgetDependencies(): Promise<{ success: boolean; erro
   
   debugLog('🚀 Starting widget dependency loading...');
   debugLog('📊 Widget Configuration:', {
-    source: urls.isLocal ? 'Local Build' : 'NPM Package',
     jsUrl: urls.jsUrl,
     cssUrl: urls.cssUrl,
     debugEnabled: isDebugEnabled()
   });
 
-  // Step 1: Check React availability (like demo.html)
   if (!checkReactAvailability()) {
-    if (urls.isLocal) {
-      const reactLoadResult = await ensureReactGlobalsForLocalWidget();
-      if (!reactLoadResult.success) {
-        errors.push(reactLoadResult.error || 'Failed to load React globals for local widget');
-        return { success: false, errors };
-      }
-    }
-  }
-
-  if (!checkReactAvailability()) {
-    const reactError = 'React and ReactDOM must be loaded first (like in demo.html)';
+    const reactError = 'React and ReactDOM must be loaded before initializing the widget.';
     debugError(reactError);
     errors.push(reactError);
     return { success: false, errors };
@@ -235,14 +133,14 @@ export async function loadWidgetDependencies(): Promise<{ success: boolean; erro
   try {
     // Step 2: Load CSS first (like demo.html does)
     debugLog(`🎨 Loading CSS from: ${urls.cssUrl}`);
-    const cssResult = await loadStylesheet(urls.cssUrl, urls.isLocal);
+    const cssResult = await loadStylesheet(urls.cssUrl);
     if (!cssResult.success) {
       errors.push(cssResult.error || 'Failed to load CSS');
     }
 
     // Step 3: Load JavaScript (like demo.html does)
     debugLog(`📦 Loading JavaScript from: ${urls.jsUrl}`);
-    const jsResult = await loadScript(urls.jsUrl, urls.isLocal);
+    const jsResult = await loadScript(urls.jsUrl);
     if (!jsResult.success) {
       errors.push(jsResult.error || 'Failed to load JavaScript');
     }
@@ -271,12 +169,8 @@ export async function loadWidgetDependencies(): Promise<{ success: boolean; erro
       debugError('❌ Failed to load some dependencies:', errors);
       debugLog('💡 Troubleshooting tips:');
       debugLog('  1. Check browser Network tab for 404 errors');
-      debugLog('  2. Verify build files exist: npm run widget:check');
+      debugLog('  2. Verify the @schmitech/chatbot-widget package is installed and accessible (unpkg.com reachable)');
       debugLog('  3. Try hard refresh: Ctrl+Shift+R / Cmd+Shift+R');
-      if (urls.isLocal) {
-        debugLog('  4. Rebuild widget: cd ../.. && npm run build');
-        debugLog('  5. Check paths match demo.html structure');
-      }
     }
 
     return { success, errors };
@@ -308,15 +202,15 @@ export async function loadPrism(): Promise<void> {
 
   try {
     // Load Prism CSS
-    await loadSingleStylesheet('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css', false);
+    await loadSingleStylesheet('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css');
     
     // Load Prism JS
-    await loadSingleScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js', false);
+    await loadSingleScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js');
     
     // Load additional language support
-    await loadSingleScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js', false);
-    await loadSingleScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js', false);
-    await loadSingleScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js', false);
+    await loadSingleScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js');
+    await loadSingleScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js');
+    await loadSingleScript('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js');
     
     debugLog('✅ Prism.js loaded successfully');
   } catch (error) {

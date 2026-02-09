@@ -1,3 +1,5 @@
+import type { ComponentType, SVGProps } from 'react';
+
 export interface CustomColors {
     primary: string;
     secondary: string;
@@ -31,6 +33,7 @@ export interface CustomColors {
       description: string;
     };
     suggestedQuestions: Array<{
+      id: string;
       text: string;
       query: string;
     }>;
@@ -84,7 +87,7 @@ export interface ThemeConfig {
   export interface IconConfig {
     id: string;
     name: string;
-    icon: any; // Lucide React icon component
+    icon: ComponentType<SVGProps<SVGSVGElement>>;
   }
   
   export interface ExpandedSections {
@@ -105,20 +108,37 @@ export interface ThemeConfig {
       theme: ThemeConfig;
     };
   }
+
+  interface PrismGlobal {
+    highlightAll: () => void;
+    [key: string]: unknown;
+  }
+
+  export interface WidgetChatConstants {
+    MAX_SUGGESTED_QUESTION_LENGTH?: number;
+    MAX_SUGGESTED_QUESTION_QUERY_LENGTH?: number;
+  }
+
+  export type WidgetRuntimeConfig = WidgetInitConfig['widgetConfig'] & {
+    CHAT_CONSTANTS?: WidgetChatConstants;
+  };
+
+  export interface ChatbotWidgetController {
+    updateWidgetConfig: (config: WidgetInitConfig['widgetConfig']) => void;
+    setApiUrl: (apiUrl: string) => void;
+    setApiKey: (apiKey: string) => void;
+    getCurrentConfig?: () => WidgetRuntimeConfig;
+    destroy?: () => void;
+  }
   
   // Global widget interface
   declare global {
     interface Window {
-      React: any;
-      ReactDOM: any;
-      Prism: any;
-      initChatbotWidget?: (config: any) => void;
-      ChatbotWidget?: {
-        updateWidgetConfig: (config: any) => void;
-        setApiUrl: (apiUrl: string) => void;
-        setApiKey: (apiKey: string) => void;
-        getCurrentConfig?: () => any;
-      };
+      React?: typeof import('react');
+      ReactDOM?: typeof import('react-dom');
+      Prism?: PrismGlobal;
+      initChatbotWidget?: (config: WidgetInitConfig) => void;
+      ChatbotWidget?: ChatbotWidgetController;
       REACT_APP_MAX_PROMPT_LENGTH?: number;
       CHATBOT_API_KEY?: string;
       CHATBOT_API_URL?: string;

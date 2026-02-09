@@ -10,6 +10,7 @@ export const generateImplementationCode = (
   customColors: CustomColors
 ): string => {
   const { systemPrompt, ...widgetConfigWithoutPrompt } = widgetConfig;
+  void systemPrompt;
   
   const config = {
     apiUrl: apiEndpoint,

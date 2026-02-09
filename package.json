@@ -5,19 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:local": "node scripts/copy-widget-files.js && VITE_WIDGET_SOURCE=local vite",
-    "dev:npm": "VITE_WIDGET_SOURCE=npm vite",
     "build": "tsc -b && vite build",
-    "build:local": "node scripts/copy-widget-files.js && VITE_WIDGET_SOURCE=local npm run build",
-    "build:npm": "VITE_WIDGET_SOURCE=npm npm run build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "widget:toggle": "node scripts/toggle-widget-source.js",
-    "widget:local": "node scripts/toggle-widget-source.js local",
-    "widget:npm": "node scripts/toggle-widget-source.js npm",
-    "widget:status": "node scripts/toggle-widget-source.js status",
-    "widget:check": "node scripts/check-local-build.js",
-    "widget:copy": "node scripts/copy-widget-files.js"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@schmitech/chatbot-widget": "^0.7.1",

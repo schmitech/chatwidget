@@ -9,7 +9,6 @@ import { WIDGET_CONFIG } from '../utils/widget-config';
 interface CodeTabProps {
   widgetConfig: WidgetConfig;
   customColors: CustomColors;
-  copied: boolean;
   generateCode: (widgetConfig: WidgetConfig, customColors: CustomColors) => string;
   onCopyCode: () => void;
   apiKey: string;
@@ -31,6 +30,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({
     // Generate a JavaScript bundle that can be imported
     
     const { systemPrompt, ...widgetConfigWithoutPrompt } = widgetConfig;
+    void systemPrompt;
     const minifiedConfig = {
       apiUrl: apiEndpoint,
       apiKey: apiKey,

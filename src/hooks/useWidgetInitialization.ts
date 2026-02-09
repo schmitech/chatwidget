@@ -39,6 +39,41 @@ export const useWidgetInitialization = ({
     currentCustomColors.current = customColors;
   }, [customColors]);
 
+  // Initialize widget
+  const handleInitializeWidget = useCallback((forceApiKey?: string, forceApiEndpoint?: string) => {
+    // Double-check to prevent duplicate initialization
+    if (widgetInitialized.current) {
+      if (isDebugEnabled()) {
+        console.log('🔄 Widget already initialized in hook - skipping');
+      }
+      return;
+    }
+
+    try {
+      // Use forced values if provided (for reinitialize), otherwise use current values
+      const keyToUse = forceApiKey || apiKey;
+      const endpointToUse = forceApiEndpoint || apiEndpoint;
+      
+      if (isDebugEnabled()) {
+        console.log('🚀 Initializing widget with:', { 
+          apiKey: keyToUse.substring(0, 4) + '...',
+          apiEndpoint: endpointToUse 
+        });
+      }
+      
+      initializeWidget(keyToUse, endpointToUse, widgetConfig, customColors);
+      widgetInitialized.current = true;
+      setIsInitialized(true);
+      
+      // Ensure the widget is properly available for updates
+      if (window.ChatbotWidget && isDebugEnabled()) {
+        console.log('✅ Widget reference is available for updates');
+      }
+    } catch (error) {
+      console.error('Failed to initialize widget:', error);
+    }
+  }, [apiEndpoint, apiKey, customColors, widgetConfig]);
+
   // Load dependencies and initialize widget
   useEffect(() => {
     // Prevent multiple initialization attempts
@@ -68,13 +103,13 @@ export const useWidgetInitialization = ({
     };
 
     initializeDependencies();
-  }, []);
+  }, [handleInitializeWidget]);
 
   // Re-highlight code when tab changes to code
   useEffect(() => {
     if (activeTab === 'code' && window.Prism) {
       setTimeout(() => {
-        window.Prism.highlightAll();
+        window.Prism?.highlightAll();
       }, 100);
     }
   }, [activeTab]);
@@ -167,43 +202,6 @@ export const useWidgetInitialization = ({
   //   }
   // }, [apiEndpoint]);
 
-  // Initialize widget
-  const handleInitializeWidget = (forceApiKey?: string, forceApiEndpoint?: string) => {
-    // Double-check to prevent duplicate initialization
-    if (widgetInitialized.current) {
-      if (isDebugEnabled()) {
-        console.log('🔄 Widget already initialized in hook - skipping');
-      }
-      return;
-    }
-
-    try {
-      // Use forced values if provided (for reinitialize), otherwise use current values
-      const keyToUse = forceApiKey || apiKey;
-      const endpointToUse = forceApiEndpoint || apiEndpoint;
-      
-      if (isDebugEnabled()) {
-        console.log('🚀 Initializing widget with:', { 
-          apiKey: keyToUse.substring(0, 4) + '...',
-          apiEndpoint: endpointToUse 
-        });
-      }
-      
-      initializeWidget(keyToUse, endpointToUse, widgetConfig, customColors);
-      widgetInitialized.current = true;
-      setIsInitialized(true);
-      
-      // Ensure the widget is properly available for updates
-      if (window.ChatbotWidget) {
-        if (isDebugEnabled()) {
-          console.log('✅ Widget reference is available for updates');
-        }
-      }
-    } catch (error) {
-      console.error('Failed to initialize widget:', error);
-    }
-  };
-
   // Update widget - using refs to always get current values
   const handleUpdateWidget = useCallback(() => {
     performWidgetUpdate();
@@ -219,9 +217,9 @@ export const useWidgetInitialization = ({
     }
     
     // First, try to destroy the existing widget if it exists
-    if (window.ChatbotWidget && 'destroy' in window.ChatbotWidget && typeof (window.ChatbotWidget as any).destroy === 'function') {
+    if (window.ChatbotWidget?.destroy) {
       try {
-        (window.ChatbotWidget as any).destroy();
+        window.ChatbotWidget.destroy();
         if (isDebugEnabled()) {
           console.log('✅ Existing widget destroyed');
         }
@@ -247,7 +245,7 @@ export const useWidgetInitialization = ({
     
     // Clear any existing widget references
     if (window.ChatbotWidget) {
-      delete (window as any).ChatbotWidget;
+      window.ChatbotWidget = undefined;
     }
     
     // Reinitialize after a short delay to ensure cleanup is complete
