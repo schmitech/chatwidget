@@ -135,7 +135,7 @@ export interface ThemeConfig {
   declare global {
     interface Window {
       React?: typeof import('react');
-      ReactDOM?: typeof import('react-dom');
+      ReactDOM?: typeof import('react-dom') & typeof import('react-dom/client');
       Prism?: PrismGlobal;
       initChatbotWidget?: (config: WidgetInitConfig) => void;
       ChatbotWidget?: ChatbotWidgetController;
