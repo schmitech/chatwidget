@@ -96,6 +96,9 @@ async function loadSingleStylesheet(href: string): Promise<LoadDependencyResult>
   });
 }
 
+const REACT_UMD_URL = 'https://unpkg.com/react@19/umd/react.production.min.js';
+const REACT_DOM_UMD_URL = 'https://unpkg.com/react-dom@19/umd/react-dom.production.min.js';
+
 // Check if React is available (like demo.html does)
 function checkReactAvailability(): boolean {
   const hasReact = typeof window.React !== 'undefined';
@@ -107,6 +110,25 @@ function checkReactAvailability(): boolean {
   });
   
   return hasReact && hasReactDOM;
+}
+
+async function ensureReactGlobals(): Promise<void> {
+  if (checkReactAvailability()) {
+    return;
+  }
+
+  debugLog('⚛️ Loading React 19 UMD globals for widget...');
+  const reactResult = await loadScript(REACT_UMD_URL);
+  if (!reactResult.success) {
+    throw new Error(reactResult.error || 'Failed to load React 19 UMD bundle');
+  }
+
+  const domResult = await loadScript(REACT_DOM_UMD_URL);
+  if (!domResult.success) {
+    throw new Error(domResult.error || 'Failed to load ReactDOM 19 UMD bundle');
+  }
+
+  debugLog('✅ React 19 globals loaded');
 }
 
 // Main dependency loader function (matches demo.html approach)
@@ -121,10 +143,12 @@ export async function loadWidgetDependencies(): Promise<{ success: boolean; erro
     debugEnabled: isDebugEnabled()
   });
 
-  if (!checkReactAvailability()) {
-    const reactError = 'React and ReactDOM must be loaded before initializing the widget.';
-    debugError(reactError);
-    errors.push(reactError);
+  try {
+    await ensureReactGlobals();
+  } catch (reactError) {
+    const message = reactError instanceof Error ? reactError.message : String(reactError);
+    debugError(message);
+    errors.push(message);
     return { success: false, errors };
   }
 
