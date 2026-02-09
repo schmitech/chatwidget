@@ -1,3 +1,4 @@
+import { ensureWidgetReactGlobals } from './react-globals';
 import { getWidgetUrls, isDebugEnabled } from './widget-config';
 
 interface LoadDependencyResult {
@@ -96,25 +97,6 @@ async function loadSingleStylesheet(href: string): Promise<LoadDependencyResult>
   });
 }
 
-// React 19 no longer ships UMD builds, so globals must be provided
-// by the host app (see main.tsx). This just verifies they're available.
-function ensureReactGlobals(): void {
-  const hasReact = typeof window.React !== 'undefined';
-  const hasReactDOM = typeof window.ReactDOM !== 'undefined';
-
-  debugLog(`React availability check:`, {
-    React: hasReact,
-    ReactDOM: hasReactDOM
-  });
-
-  if (!hasReact || !hasReactDOM) {
-    throw new Error(
-      'window.React and window.ReactDOM must be set before loading the widget. ' +
-      'React 19 has no UMD builds — globals must be provided by the host application.'
-    );
-  }
-}
-
 // Main dependency loader function (matches demo.html approach)
 export async function loadWidgetDependencies(): Promise<{ success: boolean; errors: string[] }> {
   const urls = getWidgetUrls();
@@ -128,7 +110,7 @@ export async function loadWidgetDependencies(): Promise<{ success: boolean; erro
   });
 
   try {
-    ensureReactGlobals();
+    await ensureWidgetReactGlobals();
   } catch (reactError) {
     const message = reactError instanceof Error ? reactError.message : String(reactError);
     debugError(message);
@@ -136,7 +118,7 @@ export async function loadWidgetDependencies(): Promise<{ success: boolean; erro
     return { success: false, errors };
   }
 
-  debugLog('✅ React and ReactDOM are available');
+  debugLog('✅ React and ReactDOM globals initialized');
 
   try {
     // Step 2: Load CSS first (like demo.html does)
