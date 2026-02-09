@@ -5,11 +5,20 @@ import './index.css'
 import App from './App.tsx'
 
 // Expose full React globals for the widget UMD bundle.
-// React 19 has no UMD builds, so the widget depends on these globals.
-// We merge react-dom/client exports (createRoot, hydrateRoot) into
-// the ReactDOM global since the ESM react-dom entry doesn't include them.
+// Important: mutate the real ReactDOM namespace so Rollup/Vite can't
+// tree-shake away internal fields (e.g. __DOM_INTERNALS...) that the
+// widget's React build expects to exist at runtime.
+const reactDomGlobals = ReactDOM as typeof ReactDOM & typeof import('react-dom/client');
+
+if (!reactDomGlobals.createRoot) {
+  reactDomGlobals.createRoot = createRoot;
+}
+if (!reactDomGlobals.hydrateRoot) {
+  reactDomGlobals.hydrateRoot = hydrateRoot;
+}
+
 window.React = React;
-window.ReactDOM = { ...ReactDOM, createRoot, hydrateRoot };
+window.ReactDOM = reactDomGlobals;
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
