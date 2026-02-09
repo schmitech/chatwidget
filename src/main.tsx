@@ -8,14 +8,13 @@ import App from './App.tsx'
 // Important: mutate the real ReactDOM namespace so Rollup/Vite can't
 // tree-shake away internal fields (e.g. __DOM_INTERNALS...) that the
 // widget's React build expects to exist at runtime.
-const reactDomGlobals = ReactDOM as typeof ReactDOM & typeof import('react-dom/client');
+const reactDomGlobals = Object.create(
+  Object.getPrototypeOf(ReactDOM),
+  Object.getOwnPropertyDescriptors(ReactDOM),
+) as typeof ReactDOM & typeof import('react-dom/client');
 
-if (!reactDomGlobals.createRoot) {
-  reactDomGlobals.createRoot = createRoot;
-}
-if (!reactDomGlobals.hydrateRoot) {
-  reactDomGlobals.hydrateRoot = hydrateRoot;
-}
+reactDomGlobals.createRoot ??= createRoot;
+reactDomGlobals.hydrateRoot ??= hydrateRoot;
 
 window.React = React;
 window.ReactDOM = reactDomGlobals;
